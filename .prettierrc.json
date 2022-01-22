@@ -1,0 +1,20 @@
+{
+  "trailingComma": "none",
+  "tabWidth": 2,
+  "semi": true,
+  "singleQuote": true,
+  "printWidth": 100,
+  "overrides": [
+    {
+      "files": ["*.jsx", "*.tsx"],
+      "options": {
+        "trailingComma": "none",
+        "tabWidth": 2,
+        "semi": true,
+        "singleQuote": false,
+        "arrowParens": "avoid",
+        "printWidth": 100
+      }
+    }
+  ]
+}
