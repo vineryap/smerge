@@ -43,15 +43,9 @@ const App: Component = () => {
 
           for (const fileTwoSection of fileTwoSections) {
             console.log("fileTwoSection", fileTwoSection);
-            console.log(
-              "isIntervalslOverlap",
-              isIntervalslOverlap(fileOneSection.timestamp, fileTwoSection.timestamp)
-            );
-            if (isIntervalslOverlap(fileOneSection.timestamp, fileTwoSection.timestamp)) continue;
           }
         }
       }
-      // console.log(fileOneLines);
     }
   }
   return (
