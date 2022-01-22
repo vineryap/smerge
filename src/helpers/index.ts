@@ -35,7 +35,7 @@ export function isIntervalslOverlap(timestampOne: Timestamp, timestampTwo: Times
 export function parseText(text: string | undefined): subtitleObject[] | undefined {
   const indexRegex = /([0-9]+)/;
   const timestampRegex =
-    /^(?:(\d{1,}):)?(\d{2}):(\d{2})[,.](\d{3})( --> )(?:(\d{1,}):)?(\d{2}):(\d{2})[,.](\d{3})$/m;
+    /(?:(\d{1,}):)?(\d{2}):(\d{2})[,.](\d{3})( --> )(?:(\d{1,}):)?(\d{2}):(\d{2})[,.](\d{3})/m;
 
   const sections = text?.match(
     new RegExp(indexRegex.source + '\n' + timestampRegex.source + '\n(.*?)\n\n', 'gms')
@@ -49,12 +49,13 @@ export function parseText(text: string | undefined): subtitleObject[] | undefine
       new RegExp(indexRegex.source + '\n' + timestampRegex.source + '\n'),
       ''
     );
+    console.log();
 
     return {
       index,
       timestamp: {
-        start: parseTimestampToMs(timestamps[0]) / 1000,
-        end: parseTimestampToMs(timestamps[1]) / 1000,
+        start: parseTimestampToMs(timestamps[0]),
+        end: parseTimestampToMs(timestamps[1]),
         value: timestamp
       },
       text
