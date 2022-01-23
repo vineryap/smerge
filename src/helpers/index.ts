@@ -1,21 +1,11 @@
-interface Timestamp {
-  start: number;
-  end: number;
-  value: string;
-}
+import { Timestamp, subtitleObject } from '../types';
 
-interface subtitleObject {
-  index: string;
-  timestamp: Timestamp;
-  text: string;
-}
+const timestampRegex = /((\d{1,}:)?(\d{2}):(\d{2})[,.](\d{3}))/;
 
 export function parseTimestampToMs(timestamp: string): number {
-  const match = timestamp.match(/^(?:(\d{1,}):)?(\d{2}):(\d{2})[,.](\d{3})$/);
+  const match = timestamp.match(new RegExp(`^(?:${timestampRegex.source})$`));
 
-  if (!match) {
-    throw new Error('Invalid format: "' + timestamp + '"');
-  }
+  if (!match) throw new Error('Invalid format: "' + timestamp + '"');
 
   const hours = match[1] ? parseInt(match[1], 10) * 3600000 : 0;
   const minutes = parseInt(match[2], 10) * 60000;
@@ -33,34 +23,44 @@ export function isIntervalslOverlap(timestampOne: Timestamp, timestampTwo: Times
 }
 
 export function parseText(text: string | undefined): subtitleObject[] | undefined {
-  const indexRegex = /([0-9]+)/;
-  const timestampRegex =
-    /(?:(\d{1,}):)?(\d{2}):(\d{2})[,.](\d{3})( --> )(?:(\d{1,}):)?(\d{2}):(\d{2})[,.](\d{3})/m;
-
-  const sections = text?.match(
-    new RegExp(indexRegex.source + '\n' + timestampRegex.source + '\n(.*?)\n\n', 'gms')
-  );
-
-  const parsed: subtitleObject[] | undefined = sections?.map((section) => {
-    const index = (section.match(indexRegex) as RegExpMatchArray)[0];
-    const timestamp = (section.match(timestampRegex) as RegExpMatchArray)[0];
-    const timestamps = timestamp.split(' --> ');
-    const text = section.replace(
-      new RegExp(indexRegex.source + '\n' + timestampRegex.source + '\n'),
-      ''
+  if (text) {
+    const timestampLineRegex = new RegExp(
+      timestampRegex.source + ' --> ' + timestampRegex.source,
+      'm'
     );
-    console.log();
+    const isLastCharNewline = text[text?.length - 1] === '\n';
 
-    return {
-      index,
-      timestamp: {
-        start: parseTimestampToMs(timestamps[0]),
-        end: parseTimestampToMs(timestamps[1]),
-        value: timestamp
-      },
-      text
-    };
+    if (!isLastCharNewline) text = text?.concat('\n\n');
+
+    const sections = text?.match(new RegExp(timestampLineRegex.source + '\n(.*?)\n\n', 'gs'));
+
+    const parsed: subtitleObject[] | undefined = sections?.map((section) => {
+      const timestamp = (section.match(timestampLineRegex) as RegExpMatchArray)[0];
+      const timestamps = timestamp.split(' --> ');
+      const text = section.replace(new RegExp(timestampLineRegex.source + '\n'), '');
+
+      return {
+        timestamp: {
+          start: parseTimestampToMs(timestamps[0]),
+          end: parseTimestampToMs(timestamps[1]),
+          value: timestamp
+        },
+        text
+      };
+    });
+
+    return parsed;
+  }
+}
+
+export function sortSubtitleSection(sections: subtitleObject[]) {
+  return sections.sort((a, b) => {
+    if (a.timestamp.start < b.timestamp.start) {
+      return -1;
+    }
+    if (a.timestamp.start > b.timestamp.start) {
+      return 1;
+    }
+    return 0;
   });
-
-  return parsed;
 }
