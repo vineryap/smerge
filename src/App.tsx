@@ -1,5 +1,6 @@
 import { Component, createSignal } from "solid-js";
-import { parseText, isIntervalslOverlap } from "./helpers";
+import { parseText, isIntervalslOverlap, sortSubtitleSection } from "./helpers";
+import { subtitleObject } from "./types";
 
 const App: Component = () => {
   const [fileOne, setFileOne] = createSignal<File | null>(null);
@@ -10,15 +11,12 @@ const App: Component = () => {
   }
 
   function setFileHandler(e: Event) {
-    console.log(e);
-
     const target = e.target as HTMLInputElement;
     const id = target.id;
     const file = getFile(target);
 
     if (!file?.name.match(/\.srt$/i)) {
       console.error("only .srt file is allowed.");
-
       return;
     }
 
@@ -33,18 +31,43 @@ const App: Component = () => {
     }
   }
 
-  async function readFiles(): Promise<void> {
+  async function mergeSubtitles(): Promise<void> {
     if (fileOne() && fileTwo()) {
       const fileOneSections = parseText(await fileOne()?.text());
       const fileTwoSections = parseText(await fileTwo()?.text());
-      if (fileOneSections && fileTwoSections) {
-        for (const fileOneSection of fileOneSections) {
-          console.log("fileOneSection", fileOneSection);
 
-          for (const fileTwoSection of fileTwoSections) {
-            console.log("fileTwoSection", fileTwoSection);
+      if (fileOneSections && fileTwoSections) {
+        let merged: subtitleObject[] = [];
+        const appendedIndex: number[] = [];
+        // console.log(fileOneSections);
+
+        for (let index = 0; index < fileOneSections.length; index++) {
+          let isFileOneOverlap = false;
+          const fileOneSection = fileOneSections[index];
+
+          for (let i = 0; i < fileTwoSections.length; i++) {
+            const fileTwoSection = fileTwoSections[i];
+
+            if (isIntervalslOverlap(fileOneSection.timestamp, fileTwoSection.timestamp)) {
+              const text = fileOneSection.text.replace("\n\n", "\n") + fileTwoSection.text;
+              merged.push({
+                timestamp: fileOneSection.timestamp,
+                text
+              });
+              appendedIndex.push(i);
+              isFileOneOverlap = true;
+              break;
+            }
+          }
+          if (!isFileOneOverlap) {
+            isFileOneOverlap = false;
+            merged.push(fileOneSection);
           }
         }
+
+        merged = sortSubtitleSection(
+          merged.concat(fileTwoSections.filter((s, i) => !appendedIndex.includes(i)))
+        );
       }
     }
   }
@@ -73,7 +96,7 @@ const App: Component = () => {
             </div>
           </div>
           <div class="flex justify-center mt-20">
-            <button class="px-5 py-2 bg-blue-500" onclick={readFiles}>
+            <button class="px-5 py-2 bg-blue-500" onclick={mergeSubtitles}>
               Submit
             </button>
           </div>
