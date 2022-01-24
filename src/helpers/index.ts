@@ -1,9 +1,9 @@
 import { Timestamp, subtitleObject } from '../types';
 
-const timestampRegex = /((\d{1,}:)?(\d{2}):(\d{2})[,.](\d{3}))/;
+const timestampRegex = /(?:(\d{1,}):)?(\d{2}):(\d{2})[,.](\d{3})/;
 
 export function parseTimestampToMs(timestamp: string): number {
-  const match = timestamp.match(new RegExp(`^(?:${timestampRegex.source})$`));
+  const match = timestamp.match(new RegExp(`^${timestampRegex.source}$`));
 
   if (!match) throw new Error('Invalid format: "' + timestamp + '"');
 
@@ -63,4 +63,13 @@ export function sortSubtitleSection(sections: subtitleObject[]) {
     }
     return 0;
   });
+}
+
+export function joinSubtitleSections(sections: subtitleObject[]) {
+  let subtitle = '';
+  for (let index = 0; index < sections.length; index++) {
+    const { timestamp, text } = sections[index];
+    subtitle += `${index + 1}\n${timestamp.value}\n${text}`;
+  }
+  return subtitle;
 }
