@@ -1,17 +1,11 @@
 import { Component, createMemo, createSignal, Show } from "solid-js";
-
-import {
-  parseText,
-  isIntervalslOverlap,
-  sortSubtitleSection,
-  joinSubtitleSections
-} from "./helpers";
 import Layout from "./layouts/BaseLayout";
-import { subtitleObject } from "./types";
+import { merge, Subtitle } from "subtitle-merger";
 
 const App: Component = () => {
   const [fileOne, setFileOne] = createSignal<File | null>(null);
   const [fileTwo, setFileTwo] = createSignal<File | null>(null);
+  const [subtitle, setSubtitle] = createSignal<Subtitle | null>();
   const [mergedSubtitle, setMergedSubtitle] = createSignal<string>("");
   const [isDownloadReady, setIsDownloadReady] = createSignal<boolean>(false);
 
@@ -40,8 +34,8 @@ const App: Component = () => {
     }
   }
 
-  function makeSrtFile(text: string) {
-    const data = new Blob([text], { type: "text/plain" });
+  function makeSrtFile() {
+    const data = subtitle()?.blob as Blob | MediaSource;
     if (mergedSubtitle() !== null) {
       window.URL.revokeObjectURL(mergedSubtitle());
     }
@@ -54,44 +48,11 @@ const App: Component = () => {
     }
   });
 
-  async function mergeSubtitles(): Promise<void> {
+  async function mergeSubtitles() {
     if (fileOne() && fileTwo()) {
-      const fileOneSections = parseText(await fileOne()?.text());
-      const fileTwoSections = parseText(await fileTwo()?.text());
-
-      if (fileOneSections && fileTwoSections) {
-        let mergedSections: subtitleObject[] = [];
-        const appendedIndex: number[] = [];
-
-        for (let index = 0; index < fileOneSections.length; index++) {
-          let isFileOneOverlap = false;
-          const fileOneSection = fileOneSections[index];
-
-          for (let i = 0; i < fileTwoSections.length; i++) {
-            const fileTwoSection = fileTwoSections[i];
-
-            if (isIntervalslOverlap(fileOneSection.timestamp, fileTwoSection.timestamp)) {
-              const text = fileOneSection.text.replace("\n\n", "\n") + fileTwoSection.text;
-              mergedSections.push({
-                timestamp: fileOneSection.timestamp,
-                text
-              });
-              appendedIndex.push(i);
-              isFileOneOverlap = true;
-              break;
-            }
-          }
-          if (!isFileOneOverlap) {
-            isFileOneOverlap = false;
-            mergedSections.push(fileOneSection);
-          }
-        }
-
-        mergedSections = sortSubtitleSection(
-          mergedSections.concat(fileTwoSections.filter((s, i) => !appendedIndex.includes(i)))
-        );
-        makeSrtFile(joinSubtitleSections(mergedSections));
-      }
+      const merged = merge((await fileOne()?.text()) || "", (await fileTwo()?.text()) || "");
+      setSubtitle(merged);
+      makeSrtFile();
     }
   }
 
