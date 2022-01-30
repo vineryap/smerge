@@ -6,17 +6,18 @@ interface FileInputHandlerFn {
 
 interface FileInputProps {
   label: string;
+  inputId: string;
   fileInputHandler: FileInputHandlerFn;
 }
 
-const FileInput: Component<FileInputProps> = ({ label, fileInputHandler }) => {
+const FileInput: Component<FileInputProps> = ({ label, inputId, fileInputHandler }) => {
   function onChangeHandler(e: Event) {
     fileInputHandler(e);
   }
 
   return (
     <label
-      htmlFor="subtitle_one"
+      htmlFor={inputId}
       class="w-64 flex flex-col items-center px-4 py-6 bg-white text-blue rounded-lg shadow-lg tracking-wide border border-blue cursor-pointer hover:text-blue-700 transition"
     >
       <svg
@@ -33,7 +34,7 @@ const FileInput: Component<FileInputProps> = ({ label, fileInputHandler }) => {
         type="file"
         class="hidden"
         name="subtitleOne"
-        id="subtitle_one"
+        id={inputId}
         accept=".srt"
         onChange={onChangeHandler}
       />
