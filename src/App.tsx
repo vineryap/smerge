@@ -1,11 +1,12 @@
 import { Component, createMemo, createSignal, Show } from "solid-js";
+import FileInput from "./components/FileInput";
 import Layout from "./layouts/BaseLayout";
 import { merge, Subtitle } from "subtitle-merger";
 
 const App: Component = () => {
   const [fileOne, setFileOne] = createSignal<File | null>(null);
   const [fileTwo, setFileTwo] = createSignal<File | null>(null);
-  const [subtitle, setSubtitle] = createSignal<Subtitle | null>();
+  const [subtitle, setSubtitle] = createSignal<Subtitle | null>(null);
   const [mergedSubtitle, setMergedSubtitle] = createSignal<string>("");
   const [isDownloadReady, setIsDownloadReady] = createSignal<boolean>(false);
 
@@ -13,13 +14,13 @@ const App: Component = () => {
     return (inputEl.files as FileList)[0];
   }
 
-  function setFileHandler(e: Event) {
+  function fileInputHandler(e: Event) {
     const target = e.target as HTMLInputElement;
     const id = target.id;
     const file = getFile(target);
 
     if (!file?.name.match(/\.srt$/i)) {
-      console.error("only .srt file is allowed.");
+      console.error("only .srt file is supported.");
       return;
     }
 
@@ -34,16 +35,15 @@ const App: Component = () => {
     }
   }
 
-  function makeSrtFile() {
-    const data = subtitle()?.blob as Blob | MediaSource;
-    if (mergedSubtitle() !== null) {
-      window.URL.revokeObjectURL(mergedSubtitle());
-    }
-    setMergedSubtitle(window.URL.createObjectURL(data));
-  }
-
   createMemo(() => {
-    if (mergedSubtitle()) {
+    if (subtitle() && !isDownloadReady()) {
+      const data = subtitle()?.blob as Blob | MediaSource;
+
+      if (mergedSubtitle() !== null) {
+        window.URL.revokeObjectURL(mergedSubtitle());
+      }
+      setMergedSubtitle(window.URL.createObjectURL(data));
+
       setIsDownloadReady(true);
     }
   });
@@ -52,45 +52,51 @@ const App: Component = () => {
     if (fileOne() && fileTwo()) {
       const merged = merge((await fileOne()?.text()) || "", (await fileTwo()?.text()) || "");
       setSubtitle(merged);
-      makeSrtFile();
     }
   }
 
   return (
     <Layout>
-      <div class="container px-30">
-        <div class="flex flex-col justify-between items-center">
-          <div class="flex-row flex-wrap ">
-            <label htmlFor="subtitle_one">Subtitle 1</label>
-            <input
-              type="file"
-              name="subtitleOne"
-              id="subtitle_one"
-              accept=".srt"
-              onChange={setFileHandler}
-            />
-            <label htmlFor="subtitle_two">Subtitle 2</label>
-            <input
-              type="file"
-              name="subtitleTwo"
-              id="subtitle_two"
-              accept=".srt"
-              onChange={setFileHandler}
-            />
-          </div>
+      <div class="my-15 flex flex-col items-center sm:max-w-2xl w-full p-5 sm:p-10 bg-white rounded-xl shadow-xl transition-all">
+        <div class="text-center mb-10">
+          <h2 class="mt-5 text-3xl font-bold text-gray-900">Subtitle Merger</h2>
+          <p class="mt-2 text-sm text-gray-400">
+            Merge two subtitles into one. Files are not sent to the server which means no data are
+            collected.
+          </p>
         </div>
-        <div class="flex items-center justify-center mt-20">
-          <button class="px-5 py-2 bg-blue-500" onClick={mergeSubtitles}>
-            Submit
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+          <FileInput
+            label="Add Subitle One"
+            inputId="subtitle_one"
+            fileInputHandler={fileInputHandler}
+          />
+          <FileInput
+            label="Add Subitle Two"
+            inputId="subtitle_two"
+            fileInputHandler={fileInputHandler}
+          />
+        </div>
+        <div class="w-full max-w-70">
+          <button
+            type="submit"
+            class="mt-10 w-full flex justify-center bg-blue-600 text-gray-100 p-4 rounded-full tracking-wide font-semibold focus:outline-none focus:shadow-outline hover:bg-blue-700 shadow-lg cursor-pointer transition ease-in"
+            onClick={mergeSubtitles}
+          >
+            Merge
           </button>
         </div>
         <div
           classList={{ "opacity-100": isDownloadReady(), "opacity-0": !isDownloadReady() }}
-          class="flex items-center justify-center mt-20 transition-all"
+          class="w-full max-w-70"
         >
           <Show when={isDownloadReady()}>
-            <a href={mergedSubtitle()} download={"merged.srt"} class="px-5 py-2 bg-blue-500">
-              Download
+            <a
+              href={mergedSubtitle()}
+              download={"merged.srt"}
+              class="mt-5 w-full flex justify-center bg-purple-600 text-gray-100 p-4 rounded-full tracking-wide font-semibold focus:outline-none focus:shadow-outline hover:bg-purple-700 shadow-lg cursor-pointer transition ease-in"
+            >
+              Save
             </a>
           </Show>
         </div>
