@@ -1,7 +1,7 @@
 {
   "name": "smerge",
   "version": "1.0.0",
-  "description": "",
+  "description": "Merge subtitles web app.",
   "scripts": {
     "start": "vite",
     "dev": "vite",
