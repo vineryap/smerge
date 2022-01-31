@@ -1,2 +1,3 @@
 # Subtitle Merger Web App
-:construction: Working in progress
+Merge subtitles web app.
+Demo: [https://smerge.pages.dev](https://smerge.pages.dev)
