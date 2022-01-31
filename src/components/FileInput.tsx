@@ -5,12 +5,11 @@ interface filesHandlerFn {
 }
 
 interface FileInputProps {
-  label: string;
   inputId: string;
   filesHandler: filesHandlerFn;
 }
 
-const FileInput: Component<FileInputProps> = ({ label, inputId, filesHandler }) => {
+const FileInput: Component<FileInputProps> = ({ inputId, filesHandler }) => {
   function onDropHandler(e: DragEvent) {
     e.preventDefault();
     if (!e.dataTransfer) return;

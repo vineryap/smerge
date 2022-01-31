@@ -53,11 +53,7 @@ const App: Component = () => {
           </p>
         </div>
         <div class="flex flex-col sm:flex-row w-full h-full space-y-4 sm:space-y-0 sm:space-x-4">
-          <FileInput
-            label="Add two subtitles to be merged"
-            inputId="subtitle_one"
-            filesHandler={filesHandler}
-          />
+          <FileInput inputId="subtitle_one" filesHandler={filesHandler} />
         </div>
         <ul class="block w-full justify-start mt-10 list-inside list-disc">
           <h3 class="font-bold text-gray-500 tracking-wide">Added Files</h3>
